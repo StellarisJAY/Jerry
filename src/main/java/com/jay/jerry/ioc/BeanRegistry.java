@@ -1,6 +1,5 @@
 package com.jay.jerry.ioc;
 
-import com.jay.jerry.annotation.Handler;
 import com.jay.jerry.ioc.annotation.Construct;
 import com.jay.jerry.ioc.annotation.Value;
 import com.jay.jerry.util.PropertiesUtil;
