@@ -1,7 +1,10 @@
 package com.jay.jerry.entity;
 
-import java.io.InputStream;
-import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 import java.util.Map;
 
 /**
@@ -12,36 +15,18 @@ import java.util.Map;
  * @author Jay
  * @date 2021/11/28
  **/
+@Builder
+@Getter
+@Setter
+@ToString
 public class HttpRequest {
     private String method="GET";
 
     private String protocol;
 
-    private String requestURI;
+    private String requestUrl;
 
-    private String requestURL;
+    private Map<String, String> headers;
 
-    private String relativeURI;
-
-    private Map<String, String> header;
-
-    private InputStream inputStream;
-
-    private String sessionId;
-
-    private boolean isGzip = false;
-
-    private boolean isSessionCread = false;
-
-    private String scheme = "http";
-
-    private String basePath;
-
-    private Map<String, List<Object>> params;
-
-    private String queryString = "";
-
-    private Integer contextLength = 0;
-
-
+    private Map<String,String> params;
 }
