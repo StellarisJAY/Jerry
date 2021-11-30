@@ -1,6 +1,13 @@
 package com.jay.jerry.http.nio;
 
 import com.jay.jerry.http.HttpServer;
+import com.jay.jerry.http.nio.pipeline.Pipeline;
+import com.jay.jerry.ioc.annotation.IOC;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.*;
+import java.util.Iterator;
 
 /**
  * <p>
@@ -10,10 +17,65 @@ import com.jay.jerry.http.HttpServer;
  * @author Jay
  * @date 2021/11/28
  **/
+@IOC
 public class NioServer implements HttpServer {
 
-    @Override
-    public void start() throws InterruptedException {
+    private Selector selector;
 
+    private WorkerGroup workers;
+
+    public NioServer(){
+        workers = new WorkerGroup();
+        Pipeline inputPipeline = workers.getInputPipeline();
+        inputPipeline.addLast(new HttpDecoder());
+        inputPipeline.addLast(new HttpRequestDispatcher());
+        Pipeline outputPipeline = workers.getOutputPipeline();
+        outputPipeline.addLast(new HttpEncoder());
+    }
+
+    @Override
+    public void start(int port)  {
+        try{
+            selector = Selector.open();
+            ServerSocketChannel channel = ServerSocketChannel.open();
+            channel.configureBlocking(false);
+            channel.register(selector, SelectionKey.OP_ACCEPT);
+            channel.socket().bind(new InetSocketAddress(port));
+
+        }catch (IOException e){
+
+        }
+    }
+
+    @Override
+    public void doService() {
+        while(true){
+            try{
+                selector.select();
+                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+                while(iterator.hasNext()) {
+                    SelectionKey selectionKey = iterator.next();
+                    iterator.remove();
+
+                    try{
+                        if (selectionKey.isAcceptable()) {
+                            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
+                            SocketChannel socketChannel = serverSocketChannel.accept();
+                            socketChannel.configureBlocking(false);
+                            socketChannel.register(selector, SelectionKey.OP_READ);
+                            System.out.println("accepted connection : " + socketChannel.getRemoteAddress());
+                        } else if (selectionKey.isReadable()) {
+                            SocketChannel channel = (SocketChannel) selectionKey.channel();
+                            channel.register(selector, SelectionKey.OP_WRITE);
+                            workers.process(channel);
+                        }
+                    }catch (Exception e){
+                        selectionKey.channel().close();
+                    }
+                }
+            }catch (Exception e) {
+
+            }
+        }
     }
 }

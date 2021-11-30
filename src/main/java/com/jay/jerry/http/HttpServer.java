@@ -4,6 +4,7 @@ package com.jay.jerry.http;
  * @author Jay
  */
 public interface HttpServer {
-    void start() throws InterruptedException;
+    void start(int port);
 
+    void doService();
 }

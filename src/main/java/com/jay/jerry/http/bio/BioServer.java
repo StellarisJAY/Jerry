@@ -11,8 +11,14 @@ import com.jay.jerry.http.HttpServer;
  * @date 2021/11/28
  **/
 public class BioServer implements HttpServer {
+
     @Override
-    public void start() throws InterruptedException {
+    public void start(int port) {
+
+    }
+
+    @Override
+    public void doService() {
 
     }
 }
