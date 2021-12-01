@@ -2,6 +2,7 @@ package com.jay.jerry.http.nio;
 
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.Pipeline;
+import lombok.SneakyThrows;
 
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -59,6 +60,7 @@ public class WorkerGroup {
      */
     public void process(SocketChannel channel){
         executor.execute(new Runnable() {
+            @SneakyThrows
             @Override
             public void run() {
                 try {
@@ -68,6 +70,7 @@ public class WorkerGroup {
                     channel.close();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    channel.close();
                 }
             }
         });

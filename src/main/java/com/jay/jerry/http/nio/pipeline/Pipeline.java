@@ -19,7 +19,6 @@ public class Pipeline {
     public void process(ChannelContext context) throws IOException {
         for (PipelineTask task : tasks) {
             if(!task.run(context)){
-                context.channel().close();
                 break;
             }
         }
