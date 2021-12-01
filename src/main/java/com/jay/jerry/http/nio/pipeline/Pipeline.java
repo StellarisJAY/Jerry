@@ -5,7 +5,9 @@ import java.util.LinkedList;
 
 /**
  * <p>
- *
+ *  处理流水线
+ *  请求按照流水线的任务顺序被处理.
+ *  任务之间通过上下文传递数据
  * </p>
  *
  * @author Jay

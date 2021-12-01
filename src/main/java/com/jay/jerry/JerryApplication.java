@@ -8,8 +8,9 @@ import com.jay.jerry.ioc.annotation.IOC;
 import com.jay.jerry.ioc.annotation.IOCScan;
 import com.jay.jerry.util.AnnotationUtil;
 import com.jay.jerry.util.PropertiesUtil;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import java.util.List;
  * @author Jay
  * @date 2021/11/28
  **/
+@Slf4j
 public class JerryApplication {
     private static String basePackage;
 
@@ -28,6 +30,7 @@ public class JerryApplication {
         if(clazz == null){
             throw new NullPointerException("parameter clazz missing");
         }
+        printBanner();
         // 获取扫描路径
         IOCScan iocScan = clazz.getDeclaredAnnotation(IOCScan.class);
         if(iocScan == null || (basePackage = iocScan.basePackage()).isEmpty()){
@@ -35,17 +38,24 @@ public class JerryApplication {
         }
         // 组件扫描
         String path = basePackage.replace(".", "/");
+
+        log.info("starting component scan, scan package: {}", basePackage);
         doScan(path);
 
         // Handler扫描
         List<Class<?>> handlerClazz = BeanRegistry.getClazzWithAnnotation(Handler.class);
         HandlerMapping.registerAll(handlerClazz);
+        log.info("handler scanning finished, found {} handler classes", handlerClazz.size());
 
         // 启动服务器
+        long serverStartBegin = System.currentTimeMillis();
         int port = PropertiesUtil.getInt("server.port");
-        NioServer instance = BeanRegistry.getInstance(NioServer.class);
-        instance.start(port);
-        instance.doService();
+        log.info("starting Jerry server at port: {}", port);
+        NioServer server = BeanRegistry.getInstance(NioServer.class);
+        server.start(port);
+        log.info("Jerry server started, time used: {}ms", System.currentTimeMillis() - serverStartBegin);
+        // 服务循环
+        server.doService();
     }
 
     private static void doScan(String path) throws ClassNotFoundException {
@@ -69,6 +79,21 @@ public class JerryApplication {
                     BeanRegistry.register(clazz);
                 }
             }
+        }
+    }
+
+    private static void printBanner(){
+        try(InputStream inputStream = JerryApplication.class.getClassLoader().getResourceAsStream("banner")){
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            String line;
+            while((line = reader.readLine()) != null){
+                System.out.println(line);
+            }
+            reader.close();
+            inputStreamReader.close();
+        }catch (IOException e){
+
         }
     }
 }

@@ -18,6 +18,12 @@ public class HttpConstants {
       */
     public static final String HEADER_ENDING = "\r\n\r\n";
 
+
+    public static final String METHOD_GET = "GET";
+    public static final String METHOD_POST = "POST";
     public static final String SPACE = " ";
-    public static final int MAX_LENGTH = 8 * 1024;
+    public static final int MAX_HEADER_LENGTH = 8 * 1024;
+
+    public static final String HEADER_CONTENT_TYPE = "Content-Type";
+    public static final String HEADER_CONTENT_LENGTH = "Content-Length";
 }

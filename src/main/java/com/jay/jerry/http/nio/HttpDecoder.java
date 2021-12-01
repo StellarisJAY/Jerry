@@ -3,6 +3,7 @@ package com.jay.jerry.http.nio;
 import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.exception.BadRequestException;
+import com.jay.jerry.http.nio.common.AppendableByteArray;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
 
@@ -10,12 +11,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * <p>
- *
+ *  Http解码器
  * </p>
  *
  * @author Jay
@@ -26,57 +28,82 @@ public class HttpDecoder extends PipelineTask {
     public boolean run(ChannelContext context) {
         try{
             // 分配请求行和头部ByteBuffer
-            ByteBuffer headersBuffer = ByteBuffer.allocateDirect(HttpConstants.MAX_LENGTH);
+            ByteBuffer buffer = ByteBuffer.allocateDirect(HttpConstants.MAX_HEADER_LENGTH);
             SocketChannel channel = context.channel();
             // 读取请求行和headers，可能包含数据部分
-            int headersLength = channel.read(headersBuffer);
-            if(headersLength == -1){
+            int readLength = channel.read(buffer);
+            if(readLength == -1){
                 throw new BadRequestException("request format error");
             }
-            headersBuffer.rewind();
+            buffer.rewind();
 
-            // 获取请求行范围
-            int startIndex = 0;
-            // 请求行结束下标
-            int endIndex = 0;
-            while(headersBuffer.hasRemaining()){
-                byte b = headersBuffer.get();
-                if(b == HttpConstants.LF){
-                    break;
-                }
-                else if(b != HttpConstants.CR){
-                    endIndex++;
-                }
-            }
-            byte[] requestLineBuffer = new byte[endIndex - startIndex];
-            headersBuffer.rewind();
-            // 读取请求行
-            headersBuffer.get(requestLineBuffer, startIndex, endIndex - startIndex);
-
+            /*
+                读取&解析请求行
+             */
+            AppendableByteArray requestLine = readLine(buffer, 0);
+            // 请求行结束位置
+            int requestLineEnd = requestLine.size();
             HttpRequest.HttpRequestBuilder requestBuilder = HttpRequest.builder();
             // 解析请求行
-            String requestLine = new String(requestLineBuffer, StandardCharsets.UTF_8);
-            parseRequestLine(requestLine, requestBuilder);
+            parseRequestLine(new String(requestLine.array(), StandardCharsets.UTF_8), requestBuilder);
 
-            // 读取headers部分
-            byte[] headers = new byte[headersLength - endIndex];
-            headersBuffer.rewind();
-            // 跳过CRLF两个字节
-            headersBuffer.position(endIndex + 2);
-            headersBuffer.get(headers);
-            int headersEnd = parseHeaders(new String(headers, StandardCharsets.UTF_8), requestBuilder);
-            if(headersEnd == -1){
-                throw new BadRequestException("request header is too big");
-            }
+            /*
+                读取&解析请求头
+             */
+            Map<String, String> headers = new HashMap<>();
+            readHeaders(buffer, requestLineEnd + 2, headers);
+            requestBuilder.headers(headers);
+
+
+
             // 传递到下级task
             context.put("request", requestBuilder.build());
-            headersBuffer.clear();
+            buffer.clear();
             return true;
         }catch (BadRequestException | IOException e){
             e.printStackTrace();
             context.put("error", e);
             return false;
         }
+    }
+
+    /**
+     * 读取以CRLF为换行符的一行数据
+     * @param buffer ByteBuffer
+     * @param offset 偏移，读取起点
+     * @return @see AppendableByteArray
+     */
+    public AppendableByteArray readLine(ByteBuffer buffer, int offset){
+        if(offset >= 0){
+            buffer.rewind();
+            buffer.position(offset);
+        }
+        else{
+            buffer.position(buffer.position() + 2);
+        }
+        AppendableByteArray bytes = new AppendableByteArray();
+        boolean CR = false, LF = false;
+        while(buffer.hasRemaining()){
+            byte b = buffer.get();
+            if(b == HttpConstants.LF){
+                LF = true;
+                break;
+            }
+            else if(b != HttpConstants.CR){
+                CR = true;
+                bytes.append(b);
+            }
+        }
+        return CR&&LF ? bytes : bytes.clear();
+    }
+
+    /**
+     * 从上一行结束位置读取下一行
+     * @param buffer buffer
+     * @return @see AppendableByteArray
+     */
+    public AppendableByteArray nextLine(ByteBuffer buffer){
+        return readLine(buffer, -1);
     }
 
     /**
@@ -121,34 +148,22 @@ public class HttpDecoder extends PipelineTask {
                 .params(params);
     }
 
-    /**
-     * 解析Headers
-     * @param headersString header字符串
-     * @param builder requestBuilder
-     * @return 双CRLF位置
-     * @throws BadRequestException BadRequestException 错误的请求格式
-     */
-    public int parseHeaders(String headersString, HttpRequest.HttpRequestBuilder builder) throws BadRequestException{
-        Map<String, String> headers = null;
-        int headersEnd = headersString.indexOf(HttpConstants.HEADER_ENDING);
-        // 没有找到双CRLF，表示头部过长
-        if(headersEnd == -1){
-            return -1;
+    private void readHeaders(ByteBuffer buffer, int startIndex, Map<String, String> headers) throws BadRequestException {
+        AppendableByteArray byteArray = readLine(buffer, startIndex);
+        String line = new String(byteArray.array(), StandardCharsets.UTF_8);
+        parseHeader(line, headers);
+        while((byteArray = nextLine(buffer)).size() != 0){
+            line = new String(byteArray.array(), StandardCharsets.UTF_8);
+            System.out.println(line);
+            parseHeader(line, headers);
         }
+    }
 
-        headers = new HashMap<>();
-        String[] headerParts = headersString.substring(0, headersEnd).split(HttpConstants.CRLF);
-
-        for(String pair : headerParts){
-            int between = pair.indexOf(":");
-            if(between == -1){
-                throw new BadRequestException("header format error");
-            }
-            String key = pair.substring(0, between).trim();
-            String value = pair.substring(between + 1).trim();
-            headers.put(key, value);
+    private void parseHeader(String line, Map<String, String> headers) throws BadRequestException {
+        if(!line.contains(":")){
+            throw new BadRequestException("header format error");
         }
-        builder.headers(headers);
-        return headersEnd;
+        String[] header = line.split(":");
+        headers.put(header[0], header[1]);
     }
 }
