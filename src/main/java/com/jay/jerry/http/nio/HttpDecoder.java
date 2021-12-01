@@ -157,7 +157,7 @@ public class HttpDecoder extends PipelineTask {
                     throw new BadRequestException("query params format error");
                 }
                 String name = pair.substring(0, equalsIndex).trim();
-                String value = pair.substring(equalsIndex).trim();
+                String value = pair.substring(equalsIndex + 1).trim();
                 params.put(name, value);
             }
         }
