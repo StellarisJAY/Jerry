@@ -26,4 +26,6 @@ public class HttpConstants {
 
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+
+    public static final String HTTP_1_1 = "HTTP/1.1";
 }

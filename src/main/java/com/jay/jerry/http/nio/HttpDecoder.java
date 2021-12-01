@@ -35,7 +35,6 @@ public class HttpDecoder extends PipelineTask {
                 throw new BadRequestException("request format error");
             }
             buffer.rewind();
-
             /*
                 读取&解析请求行
              */
@@ -58,15 +57,12 @@ public class HttpDecoder extends PipelineTask {
                 int contentStartIndex = buffer.position();
                 // content已经全部读取完毕
                 AppendableByteArray byteArray = readContent(buffer, channel, contentLength, bufferSize);
-                System.out.println(new String(byteArray.array(), StandardCharsets.UTF_8).length());
             }
-
             // 传递到下级task
             context.put("request", requestBuilder.build());
             buffer.clear();
             return true;
         }catch (BadRequestException | IOException e){
-            e.printStackTrace();
             context.put("error", e);
             return false;
         }
@@ -142,8 +138,8 @@ public class HttpDecoder extends PipelineTask {
         // 空格为间隔切分请求行
         String[] reqLineParts = requestLine.split(HttpConstants.SPACE);
 
-        String method = reqLineParts[0];
-        String protocol = reqLineParts[2];
+        String method = reqLineParts[0].trim();
+        String protocol = reqLineParts[2].trim();
         // url是否包含 ?
         int split = reqLineParts[1].indexOf("?");
         Map<String, String> params = null;
@@ -160,8 +156,8 @@ public class HttpDecoder extends PipelineTask {
                 if(equalsIndex == -1){
                     throw new BadRequestException("query params format error");
                 }
-                String name = pair.substring(0, equalsIndex);
-                String value = pair.substring(equalsIndex);
+                String name = pair.substring(0, equalsIndex).trim();
+                String value = pair.substring(equalsIndex).trim();
                 params.put(name, value);
             }
         }

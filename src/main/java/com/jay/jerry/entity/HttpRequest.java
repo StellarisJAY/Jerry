@@ -21,12 +21,11 @@ import java.util.Map;
 @ToString
 public class HttpRequest {
     private String method="GET";
-
     private String protocol;
-
     private String requestUrl;
+    private Map<String,String> params;
 
     private Map<String, String> headers;
 
-    private Map<String,String> params;
+    private byte[] content;
 }
