@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,12 +26,12 @@ public class HttpDecoder extends PipelineTask {
     @Override
     public boolean run(ChannelContext context) {
         try{
-            // 分配请求行和头部ByteBuffer
+            // 分配请求行和头部ByteBuffer，默认大小8K
             ByteBuffer buffer = ByteBuffer.allocateDirect(HttpConstants.MAX_HEADER_LENGTH);
             SocketChannel channel = context.channel();
             // 读取请求行和headers，可能包含数据部分
-            int readLength = channel.read(buffer);
-            if(readLength == -1){
+            int bufferSize = channel.read(buffer);
+            if(bufferSize == -1){
                 throw new BadRequestException("request format error");
             }
             buffer.rewind();
@@ -54,7 +53,13 @@ public class HttpDecoder extends PipelineTask {
             readHeaders(buffer, requestLineEnd + 2, headers);
             requestBuilder.headers(headers);
 
-
+            if(headers.containsKey(HttpConstants.HEADER_CONTENT_LENGTH)){
+                int contentLength = Integer.parseInt(headers.get(HttpConstants.HEADER_CONTENT_LENGTH));
+                int contentStartIndex = buffer.position();
+                // content已经全部读取完毕
+                AppendableByteArray byteArray = readContent(buffer, channel, contentLength, bufferSize);
+                System.out.println(new String(byteArray.array(), StandardCharsets.UTF_8).length());
+            }
 
             // 传递到下级task
             context.put("request", requestBuilder.build());
@@ -77,9 +82,6 @@ public class HttpDecoder extends PipelineTask {
         if(offset >= 0){
             buffer.rewind();
             buffer.position(offset);
-        }
-        else{
-            buffer.position(buffer.position() + 2);
         }
         AppendableByteArray bytes = new AppendableByteArray();
         boolean CR = false, LF = false;
@@ -104,6 +106,29 @@ public class HttpDecoder extends PipelineTask {
      */
     public AppendableByteArray nextLine(ByteBuffer buffer){
         return readLine(buffer, -1);
+    }
+
+    private AppendableByteArray readContent(ByteBuffer buffer, SocketChannel channel, int contentLength, int readable) throws IOException {
+        int len = contentLength;
+        AppendableByteArray byteArray = new AppendableByteArray();
+        while(len > 0){
+            int position = buffer.position();
+            int readCount = 0;
+            while (position < readable) {
+                byteArray.append(buffer.get());
+                position++;
+                readCount++;
+            }
+
+            len -= readCount;
+            if(len > 0){
+                buffer.compact();
+                buffer.rewind();
+                readable = channel.read(buffer);
+                buffer.rewind();
+            }
+        }
+        return byteArray;
     }
 
     /**
@@ -148,22 +173,34 @@ public class HttpDecoder extends PipelineTask {
                 .params(params);
     }
 
+    /**
+     * 读取headers
+     * @param buffer ByteBuffer
+     * @param startIndex header开始位置
+     * @param headers headers
+     * @throws BadRequestException BadRequest
+     */
     private void readHeaders(ByteBuffer buffer, int startIndex, Map<String, String> headers) throws BadRequestException {
         AppendableByteArray byteArray = readLine(buffer, startIndex);
         String line = new String(byteArray.array(), StandardCharsets.UTF_8);
         parseHeader(line, headers);
         while((byteArray = nextLine(buffer)).size() != 0){
             line = new String(byteArray.array(), StandardCharsets.UTF_8);
-            System.out.println(line);
             parseHeader(line, headers);
         }
     }
 
+    /**
+     * 解析请求头
+     * @param line 行
+     * @param headers headers
+     * @throws BadRequestException BadRequest
+     */
     private void parseHeader(String line, Map<String, String> headers) throws BadRequestException {
         if(!line.contains(":")){
             throw new BadRequestException("header format error");
         }
         String[] header = line.split(":");
-        headers.put(header[0], header[1]);
+        headers.put(header[0].trim(), header[1].trim());
     }
 }
