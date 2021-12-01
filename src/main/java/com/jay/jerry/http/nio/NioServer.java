@@ -63,7 +63,6 @@ public class NioServer implements HttpServer {
                             SocketChannel socketChannel = serverSocketChannel.accept();
                             socketChannel.configureBlocking(false);
                             socketChannel.register(selector, SelectionKey.OP_READ);
-                            System.out.println("accepted connection : " + socketChannel.getRemoteAddress());
                         } else if (selectionKey.isReadable()) {
                             SocketChannel channel = (SocketChannel) selectionKey.channel();
                             workers.process(channel);
