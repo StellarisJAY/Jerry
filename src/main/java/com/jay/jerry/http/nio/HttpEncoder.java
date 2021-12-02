@@ -4,6 +4,7 @@ import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.constant.HttpStatus;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
+import com.jay.jerry.exception.HttpException;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
 
@@ -31,7 +32,7 @@ public class HttpEncoder extends PipelineTask {
             // 请求发生异常，发送异常response
             if(error != null || context.get("response") == null){
                 Exception e = (Exception)error;
-                response = buildErrorResponse((HttpRequest)context.get("request"), e);
+                response = HttpResponse.errorResponse(e);
             }
             else{
                 // 没有异常，获取response
@@ -58,10 +59,13 @@ public class HttpEncoder extends PipelineTask {
                             append(HttpConstants.CRLF);
                 }
             }
+            respStringBuilder.append(HttpConstants.CRLF);
 
             byte[] bytes = respStringBuilder.toString().getBytes(StandardCharsets.UTF_8);
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             channel.write(buffer);
+            ByteBuffer contentBuffer = ByteBuffer.wrap(response.out().toByteArray());
+            channel.write(contentBuffer);
             buffer.clear();
             return false;
         } catch (IOException e) {
@@ -69,10 +73,5 @@ public class HttpEncoder extends PipelineTask {
         }
     }
 
-    private HttpResponse buildErrorResponse(HttpRequest request, Exception error){
-        return HttpResponse.builder()
-                .protocol(request != null ? request.getProtocol() : HttpConstants.HTTP_1_1)
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .build();
-    }
+
 }
