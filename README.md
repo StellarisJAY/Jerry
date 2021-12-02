@@ -59,6 +59,26 @@ public class HelloHandler extends DefaultHttpHandler {
 }
 ```
 
+### 静态资源
+
+想要让Jerry管理静态资源，比如html页面、图片？使用StaticResourceHandler可以轻松实现静态资源访问。
+
+1. 将资源放在/resources/static/路径下。
+2. 继承StaticResourceHandler，实现getResource方法，在方法中返回资源的相对路径。
+3. 加上@Handler注解。
+
+```java
+@Handler("/image")
+public class ImageHandler extends StaticResourceHandler {
+    @Override
+    public String getStaticResource(HttpRequest httpRequest) {
+        return "timg.gif";
+    }
+}
+```
+
+![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/static-resource.PNG)
+
 ### 启动Jerry服务器
 
 通过JerryApplication.run方法开启Jerry服务器，不用担心tomcat那样的servlet配置文件，Jerry会自动扫描标有@Handler注解的处理器，并保存在自己的IOC容器中。
