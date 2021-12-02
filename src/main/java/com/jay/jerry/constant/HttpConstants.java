@@ -21,6 +21,7 @@ public class HttpConstants {
 
     public static final String METHOD_GET = "GET";
     public static final String METHOD_POST = "POST";
+    public static final String METHOD_OPTIONS = "OPTIONS";
     public static final String SPACE = " ";
     public static final int MAX_HEADER_LENGTH = 8 * 1024;
 

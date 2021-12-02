@@ -1,10 +1,17 @@
 package com.jay.jerry.http.nio;
 
 import com.jay.jerry.constant.HttpConstants;
+import com.jay.jerry.constant.HttpHeaders;
+import com.jay.jerry.constant.HttpStatus;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
+import com.jay.jerry.exception.HttpException;
+import com.jay.jerry.exception.InternalErrorException;
+import com.jay.jerry.exception.MethodNotAllowedException;
+import com.jay.jerry.exception.NotFoundException;
 import com.jay.jerry.handler.HandlerMapping;
 import com.jay.jerry.handler.HttpHandler;
+import com.jay.jerry.http.common.ExceptionPage;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
 import lombok.extern.slf4j.Slf4j;
@@ -25,31 +32,38 @@ import java.util.HashMap;
 public class HttpRequestDispatcher extends PipelineTask {
     @Override
     public boolean run(ChannelContext context) {
-        HttpRequest request = (HttpRequest)context.get("request");
-        if(request == null || request.getRequestUrl() == null){
+        try{
+            HttpRequest request = (HttpRequest)context.get("request");
+            if(request == null || request.getRequestUrl() == null){
+                throw new InternalError("request parsing failed");
+            }
+            // 获取handler
+            HttpHandler handler = HandlerMapping.getHandler(request.getRequestUrl());
+            // NOT FOUND
+            if(handler == null){
+                throw new NotFoundException("no handler for " + request.getMethod() + " " + request.getRequestUrl());
+            }
+
+            String method = request.getMethod();
+            HttpResponse response = HttpResponse.builder().protocol(request.getProtocol()).headers(new HashMap<>()).build();
+
+            handler.handle(request, response);
+
+
+            response.setHeader(HttpHeaders.DATE, LocalDateTime.now().toString());
+            response.setStatus(HttpStatus.OK);
+            context.put("response", response);
+            return false;
+        }catch (HttpException e){
+            log.error(e.getMessage());
+            context.put("response", HttpResponse.errorResponse(e));
+            return false;
+        }catch (Exception e){
+            log.error(e.getMessage());
+            context.put("response", HttpResponse.errorResponse(new InternalErrorException(e.getMessage())));
             return false;
         }
-        // 获取handler
-        HttpHandler handler = HandlerMapping.getHandler(request.getRequestUrl());
-
-        if(handler == null){
-            log.info("no handler found for {} {}", request.getMethod(), request.getRequestUrl());
-            context.put("error", new RuntimeException("no handler found"));
-            return false;
-        }
-
-        String method = request.getMethod();
-        HttpResponse response = HttpResponse.builder().protocol(request.getProtocol()).headers(new HashMap<>()).build();
-
-        // 根据方法执行handler
-        if(HttpConstants.METHOD_GET.equalsIgnoreCase(method)){
-            handler.handleGet(request, response);
-        }
-        else if(HttpConstants.METHOD_POST.equalsIgnoreCase(method)){
-            handler.handlePost(request, response);
-        }
-        response.setHeader("Date", LocalDateTime.now().toString());
-        context.put("response", response);
-        return false;
     }
+
+
 }
