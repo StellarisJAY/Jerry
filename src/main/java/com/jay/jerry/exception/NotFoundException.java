@@ -4,7 +4,8 @@ import com.jay.jerry.constant.HttpStatus;
 
 /**
  * <p>
- *
+ *  NotFound
+ *  404
  * </p>
  *
  * @author Jay

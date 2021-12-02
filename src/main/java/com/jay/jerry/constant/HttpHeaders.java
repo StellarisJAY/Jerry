@@ -2,7 +2,7 @@ package com.jay.jerry.constant;
 
 /**
  * <p>
- *
+ *  常见请求头
  * </p>
  *
  * @author Jay

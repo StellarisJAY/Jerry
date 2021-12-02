@@ -24,7 +24,17 @@ public class WorkerGroup {
     private LinkedBlockingQueue<Runnable> blockingQueue;
     private int nThreads;
 
+    /**
+     * 输入管线
+     * 处理客户端流入数据
+     * 类似Netty的InboundHandler链
+     */
     private Pipeline inputPipeline;
+    /**
+     * 输出管线
+     * 处理服务端流出到客户端数据
+     * 类似Netty的OutboundHandler链
+     */
     private Pipeline outputPipeline;
 
 
@@ -64,8 +74,14 @@ public class WorkerGroup {
             @Override
             public void run() {
                 try {
+                    /*
+                        输入输出管线共用上下文
+                        通过上下文缓存传递response等数据
+                     */
                     ChannelContext context = new ChannelContext(channel);
+                    // 执行输入管线
                     inputPipeline.process(context);
+                    // 执行输出管线
                     outputPipeline.process(context);
                     channel.close();
                 } catch (Exception e) {

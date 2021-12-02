@@ -1,4 +1,4 @@
-package com.jay.jerry.http.common;
+package com.jay.jerry.exception;
 
 import com.jay.jerry.constant.HttpStatus;
 

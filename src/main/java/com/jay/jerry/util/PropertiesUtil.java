@@ -6,7 +6,7 @@ import java.util.Properties;
 
 /**
  * <p>
- *
+ *  配置文件工具
  * </p>
  *
  * @author Jay
@@ -15,6 +15,9 @@ import java.util.Properties;
 public class PropertiesUtil {
     private static Properties properties;
 
+    /*
+        加载默认配置文件
+     */
     static {
         try(InputStream inputStream = PropertiesUtil.class.getClassLoader().getResourceAsStream("server.properties")){
             properties = new Properties();
@@ -24,14 +27,20 @@ public class PropertiesUtil {
         }
     }
 
+    /**
+     * get
+     * @param key key
+     * @return value String
+     */
     public static String get(String key){
         return properties.getProperty(key);
     }
 
-    public static Object getObject(String key){
-        return properties.get(key);
-    }
-
+    /**
+     * get
+     * @param key key
+     * @return value int
+     */
     public static int getInt(String key){
         return Integer.parseInt(properties.getProperty(key));
     }

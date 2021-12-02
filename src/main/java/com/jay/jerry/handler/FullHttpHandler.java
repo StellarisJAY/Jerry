@@ -10,18 +10,14 @@ import com.jay.jerry.exception.MethodNotAllowedException;
 
 /**
  * <p>
- *  基础Handler
- *  最简单的Handler类型，默认提供了OPTIONS方法的处理。
- *  使用者只需要实现GET和POST的处理
- *  其他请求方法均不支持
- *
+ *  完整HttpHandler，
+ *  可以处理GET、POST、PUT、DELETE
  * </p>
  *
  * @author Jay
  * @date 2021/12/2
  **/
-public abstract class DefaultHttpHandler implements HttpHandler {
-
+public abstract class FullHttpHandler implements HttpHandler {
     @Override
     public final void handle(HttpRequest request, HttpResponse response) throws HttpException {
         String method = request.getMethod();
@@ -35,6 +31,12 @@ public abstract class DefaultHttpHandler implements HttpHandler {
         else if(HttpConstants.METHOD_POST.equalsIgnoreCase(method)){
             this.handlePost(request, response);
         }
+        else if(HttpConstants.METHOD_PUT.equalsIgnoreCase(method)){
+            this.handlePut(request, response);
+        }
+        else if(HttpConstants.METHOD_DELETE.equalsIgnoreCase(method)){
+            this.handleDelete(request, response);
+        }
         else{
             // 其他方法都返回405
             throw new MethodNotAllowedException("method: " + method + " not allowed for " + request.getRequestUrl());
@@ -42,20 +44,33 @@ public abstract class DefaultHttpHandler implements HttpHandler {
     }
 
     @Override
+    public abstract void handleGet(HttpRequest request, HttpResponse response);
+    @Override
+    public abstract void handlePost(HttpRequest request, HttpResponse response);
+
+    /**
+     * 处理PUT
+     * @param request request
+     * @param response response
+     */
+    public abstract void handlePut(HttpRequest request, HttpResponse response);
+
+    /**
+     * 处理DELETE
+     * @param request request
+     * @param response response
+     */
+    public abstract void handleDelete(HttpRequest request, HttpResponse response);
+
+    @Override
     public final void handleOptions(HttpRequest request, HttpResponse response) {
         /*
             写入OPTIONS的返回头部
          */
-        response.setHeader(HttpHeaders.ALLOW, "OPTIONS, GET, POST");
+        response.setHeader(HttpHeaders.ALLOW, "OPTIONS, GET, POST, PUT, DELETE");
         response.setHeader(HttpHeaders.CONTENT_LENGTH, "0");
         response.setHeader(HttpHeaders.CONTENT_TYPE, "text/plain;charset=utf-8");
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGINS, "*");
         response.setStatus(HttpStatus.OK);
     }
-
-    @Override
-    public abstract void handleGet(HttpRequest request, HttpResponse response);
-
-    @Override
-    public abstract void handlePost(HttpRequest request, HttpResponse response);
 }

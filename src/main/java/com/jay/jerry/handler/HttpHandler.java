@@ -3,7 +3,6 @@ package com.jay.jerry.handler;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
 import com.jay.jerry.exception.HttpException;
-import com.jay.jerry.exception.MethodNotAllowedException;
 
 /**
  * Handler接口

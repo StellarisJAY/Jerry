@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 属性注入
  * @author Jay
  */
 @Retention(RetentionPolicy.RUNTIME)

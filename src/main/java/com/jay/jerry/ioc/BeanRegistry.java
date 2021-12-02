@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
- *
+ *  IOC容器，单例池
+ *  目前Jerry的IOC容器仅支持单例对象，并且没有@Autowired的依赖注入。
  * </p>
  *
  * @author Jay
@@ -26,30 +27,52 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BeanRegistry {
     /**
      * 单例池
+     * 通过class找单例
      */
     private static final ConcurrentHashMap<Class<?>, Object> singletons = new ConcurrentHashMap<>(256);
 
+    /**
+     * 注册单例对象
+     * @param clazz 类
+     */
     public static void register(Class<?> clazz){
         synchronized (singletons){
             if(singletons.containsKey(clazz)){
                 throw new IllegalAccessError("class already has an instance");
             }
+            // 自动创建单例
             singletons.put(clazz, createInstance(clazz));
         }
     }
 
+    /**
+     * 获取单例
+     * @param clazz 类型
+     * @param <T> T
+     * @return instance
+     */
     public static <T> T getInstance(Class<T> clazz){
         return (T)singletons.get(clazz);
     }
 
+    /**
+     * 构造方法选择
+     * JerryIOC优先选择有@Construct注解的构造方法。
+     * 如果没有，则选择空参构造方法。
+     * JerryIOC会对有@Value注解的参数自动注入值
+     * @param clazz 类
+     * @return Constructor
+     */
     private static Constructor<?> chooseConstructor(Class<?> clazz){
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
         Constructor<?> chosenConstructor = null, noArgsConstructor = null;
         for(Constructor<?> constructor : constructors){
+            // 找到@Construct
             if(constructor.isAnnotationPresent(Construct.class)){
                 chosenConstructor = constructor;
                 break;
             }
+            // 空参
             if(constructor.getParameterCount() == 0){
                 noArgsConstructor = constructor;
             }
@@ -146,6 +169,13 @@ public class BeanRegistry {
         }
     }
 
+    /**
+     * 寻找拥有Annotation的单例
+     * 该方法会遍历整个单例池，时间复杂度为O(N)。
+     * 所以请不要在业务逻辑中过多使用该方法。
+     * @param annotation annotation
+     * @return List
+     */
     public static List<Class<?>> getClazzWithAnnotation(Class<? extends Annotation> annotation){
         Set<Map.Entry<Class<?>, Object>> entries = singletons.entrySet();
         List<Class<?>> result = new ArrayList<>();

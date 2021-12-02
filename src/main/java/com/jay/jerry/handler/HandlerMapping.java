@@ -26,12 +26,21 @@ public class HandlerMapping {
         }
     }
 
+    /**
+     * 注册Handlers
+     * @param handlers handlers
+     */
     public static void registerAll(Collection<Class<?>> handlers){
         for (Class<?> handler : handlers) {
             registerHandler(handler);
         }
     }
 
+    /**
+     * 获取handler
+     * @param url url
+     * @return HttpHandler
+     */
     public static HttpHandler getHandler(String url){
         Class<?> handlerClazz = HANDLERS.get(url);
         if(handlerClazz != null){

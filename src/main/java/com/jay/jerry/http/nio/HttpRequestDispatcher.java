@@ -1,17 +1,14 @@
 package com.jay.jerry.http.nio;
 
-import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.constant.HttpHeaders;
 import com.jay.jerry.constant.HttpStatus;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
 import com.jay.jerry.exception.HttpException;
 import com.jay.jerry.exception.InternalErrorException;
-import com.jay.jerry.exception.MethodNotAllowedException;
 import com.jay.jerry.exception.NotFoundException;
 import com.jay.jerry.handler.HandlerMapping;
 import com.jay.jerry.handler.HttpHandler;
-import com.jay.jerry.http.common.ExceptionPage;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
 import lombok.extern.slf4j.Slf4j;

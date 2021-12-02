@@ -4,7 +4,8 @@ import com.jay.jerry.constant.HttpStatus;
 
 /**
  * <p>
- *
+ *  BadRequest
+ *  协议格式错误、请求头格式错误、数据类型错误、数据超长
  * </p>
  *
  * @author Jay
