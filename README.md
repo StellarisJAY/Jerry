@@ -32,28 +32,29 @@ Handler类似Tomcat的Servlet和SpringMVC的Controller，它负责处理请求�
 
 创建一个Handler很简单：
 
-1. 实现Handler接口，以及接口中的方法。
+1. 继承DefaultHttpHandler，实现GET和POST方法。
 2. 添加@Handler注解，并在注解中指定请求路径。
 
 ```java
 @Handler("/hello")
 @Slf4j
-public class HelloHandler implements HttpHandler {
+public class HelloHandler extends DefaultHttpHandler {
 
     @Override
     public void handleGet(HttpRequest httpRequest, HttpResponse httpResponse) {
-        // 获取请求参数
+        // 获取参数
         Map<String, String> params = httpRequest.getParams();
         String name = params.get("name");
-        int age = Integer.parseInt(params.get("age"));
-        log.info("request: {} {}", name, age);
-		// 设置HTTP返回状态
-        httpResponse.setStatus(HttpStatus.OK);
+        
+        log.info("hello: {}", name);
+        // 使用out写入数据
+        httpResponse.out().write("hello: " + name);
     }
 
     @Override
     public void handlePost(HttpRequest httpRequest, HttpResponse httpResponse) {
-		// 处理POST
+        // 处理POST
+		httpResponse.out().write("hello");
     }
 }
 ```
