@@ -2,9 +2,7 @@ package com.jay.jerry.http.nio;
 
 import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.constant.HttpStatus;
-import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
-import com.jay.jerry.exception.HttpException;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
 
@@ -12,7 +10,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Map;
 
 /**

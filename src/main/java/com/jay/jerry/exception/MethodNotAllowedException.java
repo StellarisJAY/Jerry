@@ -4,7 +4,8 @@ import com.jay.jerry.constant.HttpStatus;
 
 /**
  * <p>
- *
+ *  MethodNotAllowed
+ *  不支持的请求方法
  * </p>
  *
  * @author Jay

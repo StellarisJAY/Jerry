@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 优先构造方法
  * @author Jay
  */
 @Retention(RetentionPolicy.RUNTIME)

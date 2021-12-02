@@ -4,7 +4,8 @@ import com.jay.jerry.constant.HttpStatus;
 
 /**
  * <p>
- *
+ *  InternalServerError
+ *  服务器内部错误
  * </p>
  *
  * @author Jay

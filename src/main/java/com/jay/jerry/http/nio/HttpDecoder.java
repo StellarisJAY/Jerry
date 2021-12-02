@@ -1,6 +1,7 @@
 package com.jay.jerry.http.nio;
 
 import com.jay.jerry.constant.HttpConstants;
+import com.jay.jerry.constant.HttpHeaders;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.exception.BadRequestException;
 import com.jay.jerry.http.nio.common.AppendableByteArray;
@@ -52,8 +53,8 @@ public class HttpDecoder extends PipelineTask {
             readHeaders(buffer, requestLineEnd + 2, headers);
             requestBuilder.headers(headers);
 
-            if(headers.containsKey(HttpConstants.HEADER_CONTENT_LENGTH)){
-                int contentLength = Integer.parseInt(headers.get(HttpConstants.HEADER_CONTENT_LENGTH));
+            if(headers.containsKey(HttpHeaders.CONTENT_LENGTH)){
+                int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
                 int contentStartIndex = buffer.position();
                 // content已经全部读取完毕
                 AppendableByteArray byteArray = readContent(buffer, channel, contentLength, bufferSize);

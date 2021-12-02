@@ -20,7 +20,7 @@ import java.util.jar.JarFile;
 
 /**
  * <p>
- *
+ *     Jerry启动类
  * </p>
  *
  * @author Jay
@@ -72,6 +72,7 @@ public class JerryApplication {
         URL resource = classLoader.getResource(path);
         File file;
         if(resource != null){
+            // 扫描jar包文件
             if("jar".equalsIgnoreCase(resource.getProtocol())){
                 JarURLConnection urlConnection = (JarURLConnection)resource.openConnection();
                 JarFile jarFile = urlConnection.getJarFile();

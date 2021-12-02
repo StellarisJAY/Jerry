@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 让IOC管理该类的单例
  * @author Jay
  */
 @Retention(RetentionPolicy.RUNTIME)

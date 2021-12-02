@@ -2,7 +2,7 @@ package com.jay.jerry.constant;
 
 /**
  * <p>
- *
+ *  HTTP返回状态
  * </p>
  *
  * @author Jay
@@ -34,15 +34,7 @@ public enum  HttpStatus {
         return code;
     }
 
-    public void setCode(int code) {
-        this.code = code;
-    }
-
     public String getMessage() {
         return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }
