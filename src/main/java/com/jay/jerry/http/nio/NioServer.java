@@ -3,9 +3,11 @@ package com.jay.jerry.http.nio;
 import com.jay.jerry.http.HttpServer;
 import com.jay.jerry.http.nio.pipeline.Pipeline;
 import com.jay.jerry.ioc.annotation.IOC;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.channels.*;
 import java.util.Iterator;
 
@@ -18,6 +20,7 @@ import java.util.Iterator;
  * @date 2021/11/28
  **/
 @IOC
+@Slf4j
 public class NioServer implements HttpServer {
 
     private Selector selector;
@@ -56,11 +59,11 @@ public class NioServer implements HttpServer {
                 while(iterator.hasNext()) {
                     SelectionKey selectionKey = iterator.next();
                     iterator.remove();
-
                     try{
                         if (selectionKey.isAcceptable()) {
                             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
                             SocketChannel socketChannel = serverSocketChannel.accept();
+                            socketChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                             socketChannel.configureBlocking(false);
                             socketChannel.register(selector, SelectionKey.OP_READ);
                         } else if (selectionKey.isReadable()) {
@@ -74,6 +77,7 @@ public class NioServer implements HttpServer {
                         selectionKey.channel().close();
                     }
                 }
+                selector.selectedKeys().clear();
             }catch (Exception e) {
 
             }
