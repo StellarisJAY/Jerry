@@ -19,4 +19,6 @@ public class HttpHeaders {
     public static final String ACCESS_CONTROL_ALLOW_ORIGINS = "Access-Control-Allow-Origins";
 
     public static final String DATE = "Date";
+
+    public static final String COOKIE = "Cookie";
 }

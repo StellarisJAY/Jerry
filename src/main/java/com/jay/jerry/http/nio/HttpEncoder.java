@@ -2,6 +2,7 @@ package com.jay.jerry.http.nio;
 
 import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.constant.HttpStatus;
+import com.jay.jerry.entity.Cookie;
 import com.jay.jerry.entity.HttpResponse;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
@@ -56,6 +57,16 @@ public class HttpEncoder extends PipelineTask {
                             append(HttpConstants.CRLF);
                 }
             }
+            // 写入 Set-Cookie
+            if(response.getCookies() != null){
+                for(Cookie cookie : response.getCookies().values()){
+                    respStringBuilder.append("Set-Cookie: ");
+                    respStringBuilder.append(cookie.getName()).append("=");
+                    respStringBuilder.append(cookie.getValue()).append(";");
+                    respStringBuilder.append(HttpConstants.CRLF);
+                }
+            }
+            // headers结尾空行
             respStringBuilder.append(HttpConstants.CRLF);
 
             byte[] bytes = respStringBuilder.toString().getBytes(StandardCharsets.UTF_8);

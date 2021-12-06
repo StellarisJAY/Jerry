@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +36,8 @@ public class HttpResponse {
     private Map<String, String> headers;
 
     private HttpResponseOutputSteam outputSteam;
+
+    private Map<String, Cookie> cookies;
 
     public void setHeader(String name, String value){
         headers.put(name, value);
@@ -83,5 +86,12 @@ public class HttpResponse {
         // 输出流写入错误页面
         response.out().write(exceptionPage.getHTML());
         return response;
+    }
+
+    public void setCookie(Cookie cookie){
+        if(cookies == null){
+            cookies = new HashMap<>();
+        }
+        cookies.put(cookie.getName(), cookie);
     }
 }

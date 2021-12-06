@@ -1,5 +1,7 @@
 package com.jay.jerry.entity;
 
+import com.jay.jerry.constant.JerryConstants;
+import com.jay.jerry.session.SessionContainer;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +22,6 @@ import java.util.Map;
  **/
 @Builder
 @Getter
-@Setter
 @ToString
 public class HttpRequest {
     private String method="GET";
@@ -29,11 +30,10 @@ public class HttpRequest {
     private Map<String,String> params;
     private Map<String, String> headers;
 
-    private List<Cookie> cookies;
+    private Map<String, Cookie> cookies;
     private String sessionId;
 
     private List<MultipartFile> files;
-
 
     public String getHeader(String name){
         return headers.get(name);
@@ -44,6 +44,9 @@ public class HttpRequest {
     }
 
     public String getParameter(String name){
+        if(params == null){
+            return null;
+        }
         return params.get(name);
     }
 
@@ -59,5 +62,33 @@ public class HttpRequest {
             files = new ArrayList<>();
         }
         files.add(file);
+    }
+
+    public void setCookie(Cookie cookie){
+        cookies.put(cookie.getName(), cookie);
+    }
+
+    public Cookie getCookie(String name){
+        return cookies.get(name);
+    }
+
+    /**
+     * 获取session
+     * @return HttpSession
+     */
+    public HttpSession getSession(){
+        Cookie sessionIdCookie = cookies.get(JerryConstants.COOKIES_SESSION_TAG);
+        if(sessionIdCookie == null){
+            return null;
+        }
+        String sessionId = sessionIdCookie.getValue();
+        HttpSession session = SessionContainer.getSession(sessionId);
+        // session不存在，创建新session
+        if(session == null){
+            session = SessionContainer.newSession();
+            // sessionId记录在cookie中
+            setCookie(Cookie.builder().name(JerryConstants.COOKIES_SESSION_TAG).value(session.getSessionId()).build());
+        }
+        return session;
     }
 }
