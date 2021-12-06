@@ -12,18 +12,18 @@ public enum  ContentTypes {
     /**
      * html
      */
-    TEXT_HTML("html", "text/html;charset=utf-8"),
-    TEXT_PLAIN("", "text/plain;charset=utf-8"),
-    TEXT_XML("xml", "text/xml;charset=utf-8"),
+    TEXT_HTML("html", "text/html"),
+    TEXT_PLAIN("", "text/plain"),
+    TEXT_XML("xml", "text/xml"),
 
     IMAGE_GIF("gif", "image/gif"),
     IMAGE_PNG("png", "image/png"),
 
-    APPLICATION_JSON("json", "application/json;charset=utf-8"),
+    APPLICATION_JSON("json", "application/json"),
     APPLICATION_PDF("pdf", "application/pdf"),
 
     MULTIPART_FORM_DATA("form-data", "multipart/form-data"),
-    APPLICATION_XXX_URLENCODED("url-encoded", "x-www-form-urlencoded")
+    APPLICATION_XXX_URLENCODED("url-encoded", "application/x-www-form-urlencoded")
     ;
 
     private String name;

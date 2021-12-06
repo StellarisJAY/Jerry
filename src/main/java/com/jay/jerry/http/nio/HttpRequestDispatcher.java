@@ -2,6 +2,8 @@ package com.jay.jerry.http.nio;
 
 import com.jay.jerry.constant.HttpHeaders;
 import com.jay.jerry.constant.HttpStatus;
+import com.jay.jerry.constant.JerryConstants;
+import com.jay.jerry.entity.Cookie;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
 import com.jay.jerry.exception.HttpException;
@@ -40,13 +42,11 @@ public class HttpRequestDispatcher extends PipelineTask {
             if(handler == null){
                 throw new NotFoundException("no handler for " + request.getMethod() + " " + request.getRequestUrl());
             }
-
-            String method = request.getMethod();
             HttpResponse response = HttpResponse.builder().protocol(request.getProtocol()).headers(new HashMap<>()).build();
 
             handler.handle(request, response);
-
-
+            // response写入sessionId的Cookie
+            response.setCookie(request.getCookie(JerryConstants.COOKIES_SESSION_TAG));
             response.setHeader(HttpHeaders.DATE, LocalDateTime.now().toString());
             response.setStatus(HttpStatus.OK);
             context.put("response", response);
@@ -56,7 +56,7 @@ public class HttpRequestDispatcher extends PipelineTask {
             context.put("response", HttpResponse.errorResponse(e));
             return false;
         }catch (Exception e){
-            log.error(e.getMessage());
+            log.error("error ", e);
             context.put("response", HttpResponse.errorResponse(new InternalErrorException(e.getMessage())));
             return false;
         }

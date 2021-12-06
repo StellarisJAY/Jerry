@@ -3,11 +3,16 @@ package com.jay.jerry.http.nio;
 import com.jay.jerry.constant.ContentTypes;
 import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.constant.HttpHeaders;
+import com.jay.jerry.constant.JerryConstants;
+import com.jay.jerry.entity.Cookie;
 import com.jay.jerry.entity.HttpRequest;
+import com.jay.jerry.entity.HttpSession;
 import com.jay.jerry.exception.BadRequestException;
 import com.jay.jerry.http.nio.common.AppendableByteArray;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
+import com.jay.jerry.session.SessionContainer;
+import com.jay.jerry.util.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -16,6 +21,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * <p>
@@ -46,6 +52,7 @@ public class HttpDecoder extends PipelineTask {
             // 请求行结束位置
             int requestLineEnd = requestLine.size();
             HttpRequest.HttpRequestBuilder requestBuilder = HttpRequest.builder();
+
             // 解析请求行
             parseRequestLine(new String(requestLine.array(), StandardCharsets.UTF_8), requestBuilder);
 
@@ -55,7 +62,7 @@ public class HttpDecoder extends PipelineTask {
             Map<String, String> headers = new HashMap<>();
             readHeaders(buffer, requestLineEnd + 2, headers);
             requestBuilder.headers(headers);
-
+            requestBuilder.cookies(new HashMap<>());
 
             HttpRequest request = requestBuilder.build();
             /*
@@ -65,9 +72,35 @@ public class HttpDecoder extends PipelineTask {
                 int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
                 // 从channel读取content
                 AppendableByteArray byteArray = readContent(buffer, channel, contentLength, bufferSize);
-
+                // 解析content
                 parseContent(byteArray.array(), headers, request);
             }
+
+            /*
+                读取Cookie
+             */
+            if(headers.containsKey(HttpHeaders.COOKIE)){
+                parseCookies(request);
+            }
+
+            /*
+                创建session
+                是否开启session，默认开启，只有配置了enable-session=false才关闭
+             */
+            String enableSessionProperty = PropertiesUtil.get("enable-session");
+            boolean enableSession = enableSessionProperty == null || Boolean.getBoolean(enableSessionProperty);
+            if(enableSession){
+                // 如果cookie中没有sessionId，且参数中也没有sessionId，新建session
+                Cookie cookie = request.getCookie(JerryConstants.COOKIES_SESSION_TAG);
+                // 新建session
+                if(cookie == null){
+                    HttpSession session = SessionContainer.newSession();
+                    // sessionId记录在cookie中
+                    cookie = Cookie.builder().name(JerryConstants.COOKIES_SESSION_TAG).value(session.getSessionId()).build();
+                    request.setCookie(cookie);
+                }
+            }
+
             // 传递到下级task
             context.put("request", request);
             buffer.clear();
@@ -214,15 +247,42 @@ public class HttpDecoder extends PipelineTask {
 
     private void parseContent(byte[] bytes, Map<String, String> headers, HttpRequest request) throws BadRequestException {
         String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
+        if(contentType == null){
+            return;
+        }
+        // 获取contentType枚举
         ContentTypes contentTypeEnum = ContentTypes.getContentTypeEnum(contentType.contains(";") ? contentType.substring(0, contentType.indexOf(";")) : contentType);
         if(contentTypeEnum == null){
             throw new BadRequestException("unknown content type");
         }
 
+        // 根据ContentType做不同处理
         switch(contentTypeEnum){
+            // multipart-form-data
             case MULTIPART_FORM_DATA: ContentDecoder.decodeMultipartFormData(bytes, contentType, request);break;
+
+            // xxx-urlencoded
+            case APPLICATION_XXX_URLENCODED: ContentDecoder.decodeUrlEncoded(bytes, request);break;
+
             default:break;
         }
     }
+
+    private void parseCookies(HttpRequest request){
+        Map<String, String> headers = request.getHeaders();
+        String value = headers.get(HttpHeaders.COOKIE);
+        String[] cookies = value.split(";");
+        for(String cookie : cookies){
+            int equalsIndex = cookie.indexOf("=");
+            if(equalsIndex == -1){
+                continue;
+            }
+            String cookieName = cookie.substring(0, equalsIndex).trim();
+            String cookieValue = cookie.substring(equalsIndex + 1).trim();
+            request.setCookie(Cookie.builder().name(cookieName).value(cookieValue).build());
+        }
+    }
+
+
 
 }
