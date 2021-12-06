@@ -1,9 +1,9 @@
 # Jerry
-轻量级http服务器，它比Tomcat小，所以叫Jerry。
+轻量级http服务器，它比Tomcat小，所以叫 Jerry。
 
 
 
-## 使用说明
+## 快速入门
 
 ### 导入依赖
 
@@ -59,7 +59,7 @@ public class HelloHandler extends DefaultHttpHandler {
 }
 ```
 
-### 静态资源
+### 静态资源映射
 
 想要让Jerry管理静态资源，比如html页面、图片？使用StaticResourceHandler可以轻松实现静态资源访问。
 
@@ -93,6 +93,115 @@ public class TestApplication {
     }
 }
 ```
+
+
+
+## 详细说明
+
+### 获取form-data数据
+
+Jerry会自动解析form-data的表单数据，并将属性存储在请求的参数列表中。
+
+用户可以通过request.getParameter(name)获取表单数据。
+
+```java
+	@Override
+    public void handlePost(HttpRequest request, HttpResponse response) {
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+		// do something...
+    }
+```
+
+### 上传文件之MultiparFile
+
+Jerry支持使用multipart-form-data方式的文件上传。
+
+用户 可以通过 request.getFiles()获取文件列表。
+
+获取到MultipartFile对象后，你可以通过它的InputStream来读取字节数据。
+
+```java
+	@Override
+    public void handlePost(HttpRequest request, HttpResponse response) {
+        
+        List<MultipartFile> files = request.getFiles();
+        
+        for(MultipartFile file : files){
+            // 获取文件名
+            log.info("filename: {}", file.getFilename());
+            // 获取form-data-name
+            log.info("name: {}", file.getName());
+            
+            // read from inputStream
+            InputStream inputStream = file.getInputStream();
+            
+        }
+    }
+```
+
+
+
+### Jerry与Cookie
+
+Jerry支持Cookie，你只需要用request.getCookie和response.setCookie就能够轻松的使用。
+
+```java
+	@Override
+    public void handleGet(HttpRequest httpRequest, HttpResponse httpResponse) {
+        // request cookie
+        Cookie cookie = httpRequest.getCookie("my-cookie");
+        log.info("myCookie is {}", cookie.getValue());
+
+        // response cookie
+        Cookie respCookie = Cookie.builder().name("response-cookie").value("jerry's cookie").build();
+        httpResponse.setCookie(respCookie);
+    }
+```
+
+
+
+### 使用Session
+
+Jerry提供了Session功能，用户只需要使用request.getSession()就能获取一个会话对象。
+
+目前Jerry的Session是基于Cookie的，所以暂时只支持开启Cookie的请求。
+
+下面是一个简单的登录功能实例，可以帮你理解Jerry的Session：
+
+```java
+@Handler("/login")
+public class LoginHandler extends DefaultHttpHandler {
+    @Override
+    public void handleGet(HttpRequest httpRequest, HttpResponse httpResponse) {
+
+    }
+
+    @Override
+    public void handlePost(HttpRequest request, HttpResponse response) {
+        // 从form-data获取用户名和密码
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+		
+        // 封装用户对象
+        User user = new User();
+        user.setAge(100);
+        user.setUsername(username);
+        user.setPassword(password);
+		
+        // 省略：检查用户名密码
+        
+        // 获取session
+        HttpSession session = request.getSession();
+        // 将用户对象存入session
+        session.put("login_user", user);
+
+        response.out().write("login success");
+    }
+}
+```
+
+
 
 ### 想使用Jerry的IOC容器？
 
