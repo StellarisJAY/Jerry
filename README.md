@@ -231,3 +231,44 @@ public class User {
 }
 ```
 
+
+
+### 关于Jerry的性能
+
+目前Jerry还处于开发阶段，所以没有实际应用的性能测试报告。不过在开发过程中，开发者有使用Jmeter对Jerry进行简单的压力测试。
+
+#### 测试代码
+
+一个最简单的handler，它接收到请求后直接回复一个hello字符串给客户端。
+
+```java
+@Handler("/hello")
+@Slf4j
+public class HelloHandler extends DefaultHttpHandler {
+
+    @Override
+    public void handleGet(HttpRequest httpRequest, HttpResponse httpResponse) {
+        httpResponse.out().write("hello");
+    }
+
+    @Override
+    public void handlePost(HttpRequest httpRequest, HttpResponse httpResponse) {
+        httpResponse.out().write("hello");
+    }
+}
+```
+
+#### 测试环境
+
+- CPU：Intel Core i7-8750H 2.20GHz
+- JMeter线程数：1000
+- 线程循环次数：100
+- 测试次数：3
+
+#### 测试结果
+
+![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/jerry-test-1.PNG)
+
+![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/jerry-test-2.PNG)
+
+![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/jerry-test-3.PNG)
