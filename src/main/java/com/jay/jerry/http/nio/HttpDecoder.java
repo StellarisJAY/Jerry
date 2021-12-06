@@ -214,13 +214,23 @@ public class HttpDecoder extends PipelineTask {
 
     private void parseContent(byte[] bytes, Map<String, String> headers, HttpRequest request) throws BadRequestException {
         String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
+        if(contentType == null){
+            return;
+        }
+        // 获取contentType枚举
         ContentTypes contentTypeEnum = ContentTypes.getContentTypeEnum(contentType.contains(";") ? contentType.substring(0, contentType.indexOf(";")) : contentType);
         if(contentTypeEnum == null){
             throw new BadRequestException("unknown content type");
         }
 
+        // 根据ContentType做不同处理
         switch(contentTypeEnum){
+            // multipart-form-data
             case MULTIPART_FORM_DATA: ContentDecoder.decodeMultipartFormData(bytes, contentType, request);break;
+
+            // xxx-urlencoded
+            case APPLICATION_XXX_URLENCODED: ContentDecoder.decodeUrlEncoded(bytes, request);break;
+
             default:break;
         }
     }
