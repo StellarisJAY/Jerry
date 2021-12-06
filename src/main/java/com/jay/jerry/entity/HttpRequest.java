@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,8 +27,37 @@ public class HttpRequest {
     private String protocol;
     private String requestUrl;
     private Map<String,String> params;
-
     private Map<String, String> headers;
 
-    private byte[] content;
+    private List<Cookie> cookies;
+    private String sessionId;
+
+    private List<MultipartFile> files;
+
+
+    public String getHeader(String name){
+        return headers.get(name);
+    }
+
+    public void setHeader(String name, String value){
+        headers.put(name, value);
+    }
+
+    public String getParameter(String name){
+        return params.get(name);
+    }
+
+    public void setParameter(String name, String value){
+        if(params == null){
+            params = new HashMap<>();
+        }
+        params.put(name, value);
+    }
+
+    public void addFile(MultipartFile file){
+        if(files == null){
+            files = new ArrayList<>();
+        }
+        files.add(file);
+    }
 }

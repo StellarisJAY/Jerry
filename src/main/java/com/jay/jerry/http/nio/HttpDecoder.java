@@ -1,5 +1,6 @@
 package com.jay.jerry.http.nio;
 
+import com.jay.jerry.constant.ContentTypes;
 import com.jay.jerry.constant.HttpConstants;
 import com.jay.jerry.constant.HttpHeaders;
 import com.jay.jerry.entity.HttpRequest;
@@ -7,6 +8,7 @@ import com.jay.jerry.exception.BadRequestException;
 import com.jay.jerry.http.nio.common.AppendableByteArray;
 import com.jay.jerry.http.nio.pipeline.ChannelContext;
 import com.jay.jerry.http.nio.pipeline.PipelineTask;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,6 +25,7 @@ import java.util.Map;
  * @author Jay
  * @date 2021/11/30
  **/
+@Slf4j
 public class HttpDecoder extends PipelineTask {
     @Override
     public boolean run(ChannelContext context) {
@@ -53,14 +56,20 @@ public class HttpDecoder extends PipelineTask {
             readHeaders(buffer, requestLineEnd + 2, headers);
             requestBuilder.headers(headers);
 
+
+            HttpRequest request = requestBuilder.build();
+            /*
+                读取content
+             */
             if(headers.containsKey(HttpHeaders.CONTENT_LENGTH)){
                 int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
-                int contentStartIndex = buffer.position();
-                // content已经全部读取完毕
+                // 从channel读取content
                 AppendableByteArray byteArray = readContent(buffer, channel, contentLength, bufferSize);
+
+                parseContent(byteArray.array(), headers, request);
             }
             // 传递到下级task
-            context.put("request", requestBuilder.build());
+            context.put("request", request);
             buffer.clear();
             return true;
         }catch (BadRequestException | IOException e){
@@ -109,6 +118,7 @@ public class HttpDecoder extends PipelineTask {
         int len = contentLength;
         AppendableByteArray byteArray = new AppendableByteArray();
         while(len > 0){
+            // headers读完，position在空行位置
             int position = buffer.position();
             int readCount = 0;
             while (position < readable) {
@@ -200,4 +210,19 @@ public class HttpDecoder extends PipelineTask {
         String[] header = line.split(":");
         headers.put(header[0].trim(), header[1].trim());
     }
+
+
+    private void parseContent(byte[] bytes, Map<String, String> headers, HttpRequest request) throws BadRequestException {
+        String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
+        ContentTypes contentTypeEnum = ContentTypes.getContentTypeEnum(contentType.contains(";") ? contentType.substring(0, contentType.indexOf(";")) : contentType);
+        if(contentTypeEnum == null){
+            throw new BadRequestException("unknown content type");
+        }
+
+        switch(contentTypeEnum){
+            case MULTIPART_FORM_DATA: ContentDecoder.decodeMultipartFormData(bytes, contentType, request);break;
+            default:break;
+        }
+    }
+
 }

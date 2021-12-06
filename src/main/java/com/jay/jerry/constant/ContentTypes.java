@@ -20,7 +20,10 @@ public enum  ContentTypes {
     IMAGE_PNG("png", "image/png"),
 
     APPLICATION_JSON("json", "application/json;charset=utf-8"),
-    APPLICATION_PDF("pdf", "application/pdf")
+    APPLICATION_PDF("pdf", "application/pdf"),
+
+    MULTIPART_FORM_DATA("form-data", "multipart/form-data"),
+    APPLICATION_XXX_URLENCODED("url-encoded", "x-www-form-urlencoded")
     ;
 
     private String name;
@@ -34,6 +37,15 @@ public enum  ContentTypes {
     public static ContentTypes getContentType(String name){
         for (ContentTypes value : ContentTypes.values()) {
             if(value.name.equalsIgnoreCase(name)){
+                return value;
+            }
+        }
+        return null;
+    }
+
+    public static ContentTypes getContentTypeEnum(String type){
+        for (ContentTypes value : ContentTypes.values()) {
+            if(value.contentType.equalsIgnoreCase(type)){
                 return value;
             }
         }
