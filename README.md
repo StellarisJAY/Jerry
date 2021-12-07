@@ -24,6 +24,12 @@
 ```properties
 # 服务器端口
 server.port=8080
+
+# 可选配置
+# 开启session
+enable-session=false
+# session超时时间，单位秒
+session-timeout=
 ```
 
 ### 创建Handler
@@ -235,7 +241,9 @@ public class LoginFilter extends AbstractFilter {
 
 
 
-### 想使用Jerry的IOC容器？
+### Jerry的IOC容器？
+
+Jerry内置了一个简单的IOC容器，这使得它在没有Spring等框架时依然拥有IOC功能。
 
 你可以通过@IOC注解来声明一个被Jerry管理的单例对象，并通过@Value注解对属性赋值。
 
@@ -256,20 +264,20 @@ public class User {
         this.email = email;
     }
     
-    // 没有想用的构造方法？Jerry会默认使用空参构造方法，不过记得使用@Value给参数赋值
+    // 没有想用的构造方法？Jerry会默认使用空参构造方法
     public User(){
         
     }
 }
 ```
 
+目前，Jerry的IOC没有像@Autowired、@Resource这样的依赖注入功能。如果将来有需要，我们会尽快添加。
 
+## 关于Jerry的性能
 
-### 关于Jerry的性能
+目前Jerry还处于开发阶段，所以没有实际项目的性能测试报告。不过在开发过程中，开发者有使用Jmeter对Jerry进行简单的压力测试。
 
-目前Jerry还处于开发阶段，所以没有实际应用的性能测试报告。不过在开发过程中，开发者有使用Jmeter对Jerry进行简单的压力测试。
-
-#### 测试代码
+### 测试代码
 
 一个最简单的handler，它接收到请求后直接回复一个hello字符串给客户端。
 
@@ -290,14 +298,14 @@ public class HelloHandler extends DefaultHttpHandler {
 }
 ```
 
-#### 测试环境
+### 测试环境
 
 - CPU：Intel Core i7-8750H 2.20GHz
 - JMeter线程数：1000
 - 线程循环次数：100
 - 测试次数：3
 
-#### 测试结果
+### 测试结果
 
 ![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/jerry-test-1.PNG)
 
@@ -308,3 +316,4 @@ public class HelloHandler extends DefaultHttpHandler {
 
 
 ![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/jerry-test-3.PNG)
+
