@@ -31,7 +31,9 @@ public class NioServer implements HttpServer {
         workers = new WorkerGroup();
         Pipeline inputPipeline = workers.getInputPipeline();
         inputPipeline.addLast(new HttpDecoder());
+        inputPipeline.addLast(new HttpFilterExecutor());
         inputPipeline.addLast(new HttpRequestDispatcher());
+
         Pipeline outputPipeline = workers.getOutputPipeline();
         outputPipeline.addLast(new HttpEncoder());
     }
