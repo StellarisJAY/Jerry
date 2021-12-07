@@ -201,6 +201,38 @@ public class LoginHandler extends DefaultHttpHandler {
 }
 ```
 
+### 过滤器
+
+想要过滤一些请求，Jerry的用户自定义过滤器可以很好地实现这个功能。
+
+- 首先，创建过滤器类，继承AbstractFilter。
+- 实现doFilter方法，方法返回true表示放行，返回false表示拦截。
+- 创建构造方法，并调用父类构造方法。请注意，Jerry的IOC容器默认使用空参构造器，如果要使用其他构造方法，请在构造方法上添加@Construct注解，并对参数使用@Value赋值。
+- 为过滤器类加上@Filter注解，它会告诉Jerry这是一个过滤器，需要存放在IOC容器中。
+
+下面是一个用户登录验证的过滤器示例：
+
+```java
+@Filter
+@Slf4j
+public class LoginFilter extends AbstractFilter {
+    public LoginFilter() {
+        /*
+        三个参数分别是，过滤器名称，优先级，排除路径规则
+        优先级数值大的过滤器优先执行。
+        排除路径请使用正则表达式声明。
+        */
+        super("login-filter", 1000, new String[]{"/login"});
+    }
+
+    @Override
+    public boolean doFilter(HttpRequest httpRequest) {
+        HttpSession session = httpRequest.getSession();
+        return session.get("login_user") != null;
+    }
+}
+```
+
 
 
 ### 想使用Jerry的IOC容器？

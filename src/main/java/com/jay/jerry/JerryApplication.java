@@ -1,6 +1,8 @@
 package com.jay.jerry;
 
+import com.jay.jerry.annotation.Filter;
 import com.jay.jerry.annotation.Handler;
+import com.jay.jerry.filter.FilterContainer;
 import com.jay.jerry.handler.HandlerMapping;
 import com.jay.jerry.http.nio.NioServer;
 import com.jay.jerry.ioc.BeanRegistry;
@@ -52,6 +54,10 @@ public class JerryApplication {
             HandlerMapping.registerAll(handlerClazz);
             log.info("handler scanning finished, found {} handler classes", handlerClazz.size());
 
+            // Filter扫描
+            List<Class<?>> filterClasses = BeanRegistry.getClazzWithAnnotation(Filter.class);
+            FilterContainer.registerAll(filterClasses);
+            log.info("filter scanning finished, found {} filter classes", filterClasses.size());
             // 启动服务器
             long serverStartBegin = System.currentTimeMillis();
             int port = PropertiesUtil.getInt("server.port");
