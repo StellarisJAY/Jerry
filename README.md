@@ -317,3 +317,6 @@ public class HelloHandler extends DefaultHttpHandler {
 
 ![](https://images-1257369645.cos.ap-chengdu.myqcloud.com/jerry-docs/%E6%B5%8B%E8%AF%95%E6%8A%A5%E5%91%8A/jerry-test-3.PNG)
 
+## 后续计划
+
+目前本人在进行一个分布式存储的开发，准备使用Jerry作为该存储系统的Http接口服务器以及管理界面服务器，所以Jerry的后续功能都将以实际开发中遇到的问题为基础开发。

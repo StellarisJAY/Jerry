@@ -9,6 +9,7 @@ import com.jay.jerry.entity.HttpResponse;
 import com.jay.jerry.exception.HttpException;
 import com.jay.jerry.exception.InternalErrorException;
 import com.jay.jerry.exception.MethodNotAllowedException;
+import com.jay.jerry.exception.NotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,9 @@ public abstract class StaticResourceHandler implements HttpHandler {
             path = "static/" + path;
             // 读取静态资源
             try(InputStream inputStream = StaticResourceHandler.class.getClassLoader().getResourceAsStream(path)){
+                if(inputStream == null){
+                    throw new NotFoundException("no resource at path: " + path);
+                }
                 byte[] buffer = new byte[1024];
                 while((inputStream.read(buffer, 0, buffer.length)) != -1){
                     // 写入outputStream

@@ -3,7 +3,6 @@ package com.jay.jerry.http.nio;
 import com.jay.jerry.constant.HttpHeaders;
 import com.jay.jerry.constant.HttpStatus;
 import com.jay.jerry.constant.JerryConstants;
-import com.jay.jerry.entity.Cookie;
 import com.jay.jerry.entity.HttpRequest;
 import com.jay.jerry.entity.HttpResponse;
 import com.jay.jerry.exception.HttpException;
@@ -36,6 +35,7 @@ public class HttpRequestDispatcher extends PipelineTask {
             if(request == null || request.getRequestUrl() == null){
                 throw new InternalError("request parsing failed");
             }
+
             // 获取handler
             HttpHandler handler = HandlerMapping.getHandler(request.getRequestUrl());
             // NOT FOUND

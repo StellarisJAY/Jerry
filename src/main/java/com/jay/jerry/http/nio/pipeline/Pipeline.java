@@ -1,6 +1,5 @@
 package com.jay.jerry.http.nio.pipeline;
 
-import java.io.IOException;
 import java.util.LinkedList;
 
 /**
@@ -16,7 +15,7 @@ import java.util.LinkedList;
 public class Pipeline {
     private LinkedList<PipelineTask> tasks = new LinkedList<>();
 
-    public void process(ChannelContext context) throws IOException {
+    public void process(ChannelContext context) {
         for (PipelineTask task : tasks) {
             if(!task.run(context)){
                 break;
